@@ -8,16 +8,18 @@ import pydantic_core
 from fastmcp import FastMCP
 from mcp.types import AudioContent, ContentBlock, EmbeddedResource, ImageContent, TextContent, TextResourceContents
 from pydantic import BaseModel, ConfigDict, Field
+
 from pydantic_ai.mcp import TOOL_SCHEMA_VALIDATOR, messages
 from pydantic_ai.tools import AgentDepsT, ToolDefinition
 from pydantic_ai.toolsets import AbstractToolset
 from pydantic_ai.toolsets.abstract import ToolsetTool
 
 if TYPE_CHECKING:
-    from fastmcp.mcp_config import MCPConfig
+    from fastmcp.mcp_config import MCPConfig, MCPServerTypes
     from fastmcp.tools import Tool as FastMCPTool
     from fastmcp.tools.tool import ToolResult
     from fastmcp.tools.tool_transform import ToolTransformConfig
+
     from pydantic_ai.tools import RunContext
 
 
@@ -57,7 +59,7 @@ class FastMCPToolset(BaseModel, AbstractToolset[AgentDepsT]):  # pyright: ignore
         return call_tool_result.structured_content or _map_fastmcp_tool_results(parts=call_tool_result.content)
 
     @classmethod
-    def from_mcp_config(cls, mcp_config: MCPConfig) -> FastMCPToolset[AgentDepsT]:
+    def from_mcp_config(cls, mcp_config: MCPConfig | dict[str, MCPServerTypes] | dict[str, Any]) -> FastMCPToolset[AgentDepsT]:
         return cls(fastmcp=FastMCP.as_proxy(backend=mcp_config))
 
 

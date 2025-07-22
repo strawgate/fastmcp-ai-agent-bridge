@@ -1,6 +1,6 @@
 [project]
 name = "fastmcp-ai-agent-bridge"
-version = "0.1.1"
+version = "0.1.2"
 description = "Bridge for AI Agents to leverage FastMCP"
 readme = "README.md"
 requires-python = ">=3.13"
@@ -65,7 +65,8 @@ line-length = 140
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
-addopts = "-s -vvv"  # Disable Captures
+addopts = ["-s", "-vvv", "--import-mode=importlib"]
+pythonpath = ["."]
 
 [tool.ruff.lint.extend-per-file-ignores]
 "*/tests/**" = [ 
@@ -88,11 +89,9 @@ addopts = "-s -vvv"  # Disable Captures
 [tool.pyright]
 reportExplicitAny = false
 reportMissingTypeStubs = false
-include = ["**/tests/*"]
 
 
 [tool.uv.workspace]
 members = [
     "fastmcp-ai-agent-bridge-pydantic-ai",
 ]
-
