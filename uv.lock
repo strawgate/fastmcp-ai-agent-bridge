@@ -456,7 +456,7 @@ wheels = [
 
 [[package]]
 name = "fastmcp-ai-agent-bridge"
-version = "0.1.0"
+version = "0.1.1"
 source = { virtual = "." }
 dependencies = [
     { name = "fastmcp" },
@@ -485,8 +485,8 @@ dev = [
 
 [[package]]
 name = "fastmcp-ai-agent-bridge-pydantic-ai"
-version = "0.1.0"
-source = { editable = "fastmcp-ai-agent-bridge-pydantic-ai" }
+version = "0.1.1"
+source = { virtual = "fastmcp-ai-agent-bridge-pydantic-ai" }
 dependencies = [
     { name = "fastmcp" },
     { name = "logfire" },

@@ -1,6 +1,6 @@
 [project]
 name = "fastmcp-ai-agent-bridge"
-version = "0.1.0"
+version = "0.1.1"
 description = "Bridge for AI Agents to leverage FastMCP"
 readme = "README.md"
 requires-python = ">=3.13"

@@ -1,7 +1,7 @@
 [project]
 name = "fastmcp-ai-agent-bridge-pydantic-ai"
-version = "0.1.0"
-description = "Add your description here"
+version = "0.1.1"
+description = "Pydantic AI Agent Bridge"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
@@ -22,19 +22,6 @@ dev = [
 lint = [
   "ruff"
 ]
-
-[build-system]
-requires = ["hatchling", "uv-dynamic-versioning>=0.7.0"]
-build-backend = "hatchling.build"
-
-[tool.hatch.metadata]
-allow-direct-references = true
-
-[tool.hatch.build.targets.wheel]
-packages = ["src/fastmcp_ai_agent_bridge"]
-
-[tool.hatch.build.targets.sdist]
-packages = ["src/fastmcp_ai_agent_bridge"]
 
 [tool.ruff]
 extend="../pyproject.toml"
