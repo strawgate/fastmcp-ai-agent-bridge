@@ -14,13 +14,13 @@ if TYPE_CHECKING:
 
 
 @pytest.fixture
-def vertex_ai_provider() -> GoogleProvider:
-    return GoogleProvider(vertexai=True)
+def gemini_provider() -> GoogleProvider:
+    return GoogleProvider(vertexai=False)
 
 
 @pytest.fixture
-def model(vertex_ai_provider: GoogleProvider) -> GoogleModel:
-    return GoogleModel("gemini-2.5-flash", provider=vertex_ai_provider)
+def model(gemini_provider: GoogleProvider) -> GoogleModel:
+    return GoogleModel("gemini-2.5-flash", provider=gemini_provider)
 
 
 @pytest.mark.asyncio

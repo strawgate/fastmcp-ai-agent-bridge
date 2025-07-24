@@ -23,7 +23,7 @@ jobs:
         run: uv sync --locked --group dev
 
       - name: "Build"
-        run: uv build
+        run: uv build --no-sources
 
       - name: "Publish to PyPi"
         run: uv publish -v dist/*
@@ -48,15 +48,18 @@ jobs:
         run: uv sync --locked --group dev
         working-directory: ${{ matrix.package }}
 
-      # - name: "Test ${matrix.package}"
-      #   run: uv run pytest tests
-      #   working-directory: ${{ matrix.package }}
-      #   env:
-      #     GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+      - name: "Test ${matrix.package}"
+        run: uv run pytest tests
+        working-directory: ${{ matrix.package }}
+        env:
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
       - name: "Build ${matrix.package}"
         working-directory: ${{ matrix.package }}
-        run: uv build
+        run: uv build --no-sources
 
       - name: "Publish to PyPi ${matrix.package}"
         run: uv publish -v dist/*

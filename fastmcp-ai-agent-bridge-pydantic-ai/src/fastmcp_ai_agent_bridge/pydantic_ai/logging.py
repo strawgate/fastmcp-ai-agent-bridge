@@ -1,10 +1,12 @@
 import json
 from datetime import UTC, datetime
+from typing import Any
 
 import logfire
 from logfire import ConsoleOptions
 from opentelemetry.sdk.trace import ReadableSpan
 from opentelemetry.sdk.trace.export import ConsoleSpanExporter, SimpleSpanProcessor
+
 from pydantic_ai import Agent
 
 
@@ -18,7 +20,7 @@ def get_tool_names_from_span(span: ReadableSpan) -> list[str]:
     if not isinstance(model_request_parameters, str):
         return []
 
-    deserialized_model_request_parameters = json.loads(model_request_parameters)
+    deserialized_model_request_parameters: dict[str, Any] = json.loads(model_request_parameters)
 
     if not (function_tools := deserialized_model_request_parameters.get("function_tools")):
         return []

@@ -35,12 +35,16 @@ FastMCPToolResults = list[FastMCPToolResult] | FastMCPToolResult
 class FastMCPToolset(BaseModel, AbstractToolset[AgentDepsT]):  # pyright: ignore[reportUnsafeMultipleInheritance]
     model_config: ClassVar[ConfigDict] = ConfigDict(arbitrary_types_allowed=True)
     fastmcp: FastMCP[Any] = Field(..., description="The fastmcp instance to bridge to")
+    tool_retries: int = Field(default=2, description="The number of times to retry a failed tool call")
 
     @override
     async def get_tools(self, ctx: RunContext[AgentDepsT]) -> dict[str, ToolsetTool[AgentDepsT]]:
         fastmcp_tools: dict[str, FastMCPTool] = await self.fastmcp.get_tools()
 
-        return {tool.name: convert_fastmcp_tool_to_toolset_tool(toolset=self, fastmcp_tool=tool) for tool in fastmcp_tools.values()}
+        return {
+            tool.name: convert_fastmcp_tool_to_toolset_tool(toolset=self, fastmcp_tool=tool, retries=self.tool_retries)
+            for tool in fastmcp_tools.values()
+        }
 
     async def get_tool(self, key: str, transformation: ToolTransformConfig | None = None) -> ToolsetTool[AgentDepsT]:
         fastmcp_tool: FastMCPTool = await self.fastmcp.get_tool(key=key)
@@ -48,7 +52,7 @@ class FastMCPToolset(BaseModel, AbstractToolset[AgentDepsT]):  # pyright: ignore
         if transformation:
             fastmcp_tool = transformation.apply(fastmcp_tool)
 
-        return convert_fastmcp_tool_to_toolset_tool(toolset=self, fastmcp_tool=fastmcp_tool)
+        return convert_fastmcp_tool_to_toolset_tool(toolset=self, fastmcp_tool=fastmcp_tool, retries=self.tool_retries)
 
     def add_tool_transformation(self, tool_name: str, transformation: ToolTransformConfig) -> None:
         self.fastmcp.add_tool_transformation(tool_name=tool_name, transformation=transformation)
@@ -83,7 +87,9 @@ class FastMCPToolset(BaseModel, AbstractToolset[AgentDepsT]):  # pyright: ignore
         return cls(fastmcp=mcp_server_host)
 
 
-def convert_fastmcp_tool_to_toolset_tool(toolset: FastMCPToolset[AgentDepsT], fastmcp_tool: FastMCPTool) -> ToolsetTool[AgentDepsT]:
+def convert_fastmcp_tool_to_toolset_tool(
+    toolset: FastMCPToolset[AgentDepsT], fastmcp_tool: FastMCPTool, retries: int
+) -> ToolsetTool[AgentDepsT]:
     return ToolsetTool[AgentDepsT](
         tool_def=ToolDefinition(
             name=fastmcp_tool.name,
@@ -91,7 +97,7 @@ def convert_fastmcp_tool_to_toolset_tool(toolset: FastMCPToolset[AgentDepsT], fa
             parameters_json_schema=fastmcp_tool.parameters,
         ),
         toolset=toolset,
-        max_retries=0,
+        max_retries=retries,
         args_validator=TOOL_SCHEMA_VALIDATOR,
     )
 
