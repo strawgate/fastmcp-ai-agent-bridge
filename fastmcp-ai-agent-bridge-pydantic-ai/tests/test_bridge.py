@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 
 @pytest.fixture
 def vertex_ai_provider() -> GoogleProvider:
-    return GoogleProvider()
+    return GoogleProvider(vertexai=True)
 
 
 @pytest.fixture

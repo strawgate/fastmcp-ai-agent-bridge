@@ -5,17 +5,21 @@ import contextlib
 from typing import TYPE_CHECKING, Any, ClassVar, override
 
 import pydantic_core
-from fastmcp import FastMCP
+from fastmcp import FastMCP  # noqa: TC002
+from fastmcp.exceptions import ToolError
+from fastmcp.mcp_config import MCPConfig
+from fastmcp.utilities.mcp_config import composite_server_from_mcp_config  # pyright: ignore[reportUnknownVariableType]
 from mcp.types import AudioContent, ContentBlock, EmbeddedResource, ImageContent, TextContent, TextResourceContents
 from pydantic import BaseModel, ConfigDict, Field
 
+from pydantic_ai.exceptions import ModelRetry
 from pydantic_ai.mcp import TOOL_SCHEMA_VALIDATOR, messages
 from pydantic_ai.tools import AgentDepsT, ToolDefinition
 from pydantic_ai.toolsets import AbstractToolset
 from pydantic_ai.toolsets.abstract import ToolsetTool
 
 if TYPE_CHECKING:
-    from fastmcp.mcp_config import MCPConfig, MCPServerTypes
+    from fastmcp.mcp_config import MCPServerTypes
     from fastmcp.tools import Tool as FastMCPTool
     from fastmcp.tools.tool import ToolResult
     from fastmcp.tools.tool_transform import ToolTransformConfig
@@ -55,12 +59,28 @@ class FastMCPToolset(BaseModel, AbstractToolset[AgentDepsT]):  # pyright: ignore
     @override
     async def call_tool(self, name: str, tool_args: dict[str, Any], ctx: RunContext[AgentDepsT], tool: ToolsetTool[AgentDepsT]) -> Any:  # pyright: ignore[reportAny]
         fastmcp_tool: FastMCPTool = await self.fastmcp.get_tool(key=name)
-        call_tool_result: ToolResult = await fastmcp_tool.run(arguments=tool_args)
+        try:
+            call_tool_result: ToolResult = await fastmcp_tool.run(arguments=tool_args)
+        except ToolError as e:
+            raise ModelRetry(message=str(object=e)) from e
+        return call_tool_result.structured_content or _map_fastmcp_tool_results(parts=call_tool_result.content)
+
+    async def call_tool_direct(self, name: str, tool_args: dict[str, Any]) -> Any:  # pyright: ignore[reportAny]
+        fastmcp_tool: FastMCPTool = await self.fastmcp.get_tool(key=name)
+        try:
+            call_tool_result: ToolResult = await fastmcp_tool.run(arguments=tool_args)
+        except ToolError as e:
+            raise ModelRetry(message=str(object=e)) from e
         return call_tool_result.structured_content or _map_fastmcp_tool_results(parts=call_tool_result.content)
 
     @classmethod
     def from_mcp_config(cls, mcp_config: MCPConfig | dict[str, MCPServerTypes] | dict[str, Any]) -> FastMCPToolset[AgentDepsT]:
-        return cls(fastmcp=FastMCP.as_proxy(backend=mcp_config))
+        if not isinstance(mcp_config, MCPConfig):
+            mcp_config = MCPConfig(mcpServers=mcp_config)
+
+        mcp_server_host: FastMCP[Any] = composite_server_from_mcp_config(config=mcp_config, name_as_prefix=False)
+
+        return cls(fastmcp=mcp_server_host)
 
 
 def convert_fastmcp_tool_to_toolset_tool(toolset: FastMCPToolset[AgentDepsT], fastmcp_tool: FastMCPTool) -> ToolsetTool[AgentDepsT]:

@@ -1,9 +1,8 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import logfire
 from fastmcp import FastMCP
 from fastmcp.mcp_config import MCPConfig, TransformingStdioMCPServer
-from fastmcp.server.proxy import FastMCPProxy
 from pydantic import BaseModel
 from pydantic_ai import Agent
 from pydantic_ai.models.google import GoogleModel
@@ -31,11 +30,10 @@ mcp_config = MCPConfig(
     },
 )
 
-proxy: FastMCPProxy = FastMCP.as_proxy(backend=mcp_config)
-fastmcp_toolset: FastMCPToolset[None] = FastMCPToolset[None](fastmcp=proxy)
+fastmcp_toolset: FastMCPToolset[None] = FastMCPToolset[None].from_mcp_config(mcp_config)
 
 agent = Agent(
-    model,
+    "model",
     system_prompt="Be concise, reply with one sentence.",
     toolsets=[fastmcp_toolset],
 )
@@ -46,6 +44,9 @@ class ConvertTimezonesResponse(BaseModel):
     converted_time: str
     starting_timezone: str
     ending_timezone: str
+
+
+proxy: FastMCP[Any] = FastMCP[Any](name="time_zone")
 
 
 @proxy.tool(name="convert_timezones")
